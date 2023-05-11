@@ -1,0 +1,76 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah
+  labels:
+    app.kubernetes.io/version: {{ .Chart.Version }}
+{{- if .Values.annotations }}
+  annotations: {}
+  {{- .Values.annotations | toYaml | nindent 4 }}
+{{- end }}
+spec:
+  description: |
+    TODO
+  params:
+    - name: IMAGE
+      type: string
+      description: |
+        Reference of the image buildah will produce.
+
+    - name: STORAGE_DRIVER
+      type: string
+      default: overlay
+      description: |
+        Set buildah storage driver
+
+    - name: CONTAINERFILE_PATH
+      type: string
+      default: ./Containerfile
+      description: |
+        Path to the `Containerfile` (`Dockerfile`) to build.
+
+    - name: CONTEXT_SUBDIRECTORY
+      type: string
+      default: .
+      description: |
+        Relative subdirectory to the `source` Workspace used as "context".
+
+    - name: TLS_VERIFY
+      type: string
+      default: "true"
+      description: |
+        Sets the TLS verification flags, `true` is recommended.
+
+    - name: BUILD_EXTRA_ARGS
+      type: string
+      default: ""
+      description: |
+        Extra parameters passed for the build command when building images.
+
+    - name: PUSH_EXTRA_ARGS
+      type: string
+      default: ""
+      description: |
+        Extra parameters passed for the push command when pushing images.
+
+    - name: SKIP_PUSH
+      default: "false"
+      description: |
+        Skip pushing the built image
+
+  workspace:
+    - name: source
+
+  results:
+    - name: IMAGE_DIGEST
+      description: |
+        Digest of the image just built.
+
+    - name: IMAGE_URL
+      description: |
+        Image repository where the built image would be pushed to
+
+  steps:
+    - name: build
+      image: {{ .Values.images.buildah }}
